@@ -2,7 +2,7 @@
 
 namespace SlaveMarket\Lease;
 
-use DateTime;
+use Carbon\Carbon;
 
 /**
  * Арендованный час
@@ -14,7 +14,7 @@ class LeaseHour
     /**
      * Время начала часа
      *
-     * @var DateTime
+     * @var Carbon
      */
     protected $dateTime;
 
@@ -25,7 +25,7 @@ class LeaseHour
      */
     public function __construct(string $dateTime)
     {
-        $this->dateTime = DateTime::createFromFormat('Y-m-d H', $dateTime);
+        $this->dateTime = Carbon::createFromFormat('Y-m-d H', $dateTime);
     }
 
     /**
@@ -41,9 +41,9 @@ class LeaseHour
     /**
      * Возвращает объект даты
      *
-     * @return DateTime
+     * @return Carbon
      */
-    public function getDateTime(): DateTime
+    public function getDateTime(): Carbon
     {
         return $this->dateTime;
     }
@@ -65,6 +65,6 @@ class LeaseHour
      */
     public function getHour(): string
     {
-        return $this->dateTime->format('H');
+        return $this->dateTime->hour;
     }
 }

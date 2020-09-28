@@ -3,10 +3,11 @@
 namespace SlaveMarket\Lease;
 
 use PHPUnit\Framework\TestCase;
-use SlaveMarket\Master;
-use SlaveMarket\MastersRepository;
-use SlaveMarket\Slave;
-use SlaveMarket\SlavesRepository;
+use Prophecy\Prophecy\ObjectProphecy;
+use SlaveMarket\Entity\Master;
+use SlaveMarket\Entity\MastersRepositoryInterface;
+use SlaveMarket\Entity\Slave;
+use SlaveMarket\Entity\SlavesRepositoryInterface;
 
 /**
  * Тесты операции аренды раба
@@ -19,11 +20,12 @@ class LeaseOperationTest extends TestCase
      * Stub репозитория хозяев
      *
      * @param Master[] ...$masters
-     * @return MastersRepository
+     * @return MastersRepositoryInterface
      */
-    private function makeFakeMasterRepository(...$masters): MastersRepository
+    private function makeFakeMasterRepository(...$masters): MastersRepositoryInterface
     {
-        $mastersRepository = $this->prophesize(MastersRepository::class);
+        /** @var MastersRepositoryInterface $mastersRepository */
+        $mastersRepository = $this->prophesize(MastersRepositoryInterface::class);
         foreach ($masters as $master) {
             $mastersRepository->getById($master->getId())->willReturn($master);
         }
@@ -34,12 +36,13 @@ class LeaseOperationTest extends TestCase
     /**
      * Stub репозитория рабов
      *
-     * @param Slave[] ...$slaves
-     * @return SlavesRepository
+     * @param Slave[] $slaves
+     * @return SlavesRepositoryInterface
      */
-    private function makeFakeSlaveRepository(...$slaves): SlavesRepository
+    private function makeFakeSlaveRepository(...$slaves): SlavesRepositoryInterface
     {
-        $slavesRepository = $this->prophesize(SlavesRepository::class);
+        /** @var SlavesRepositoryInterface $slavesRepository */
+        $slavesRepository = $this->prophesize(SlavesRepositoryInterface::class);
         foreach ($slaves as $slave) {
             $slavesRepository->getById($slave->getId())->willReturn($slave);
         }
@@ -55,12 +58,12 @@ class LeaseOperationTest extends TestCase
         // -- Arrange
         {
             // Хозяева
-            $master1    = new Master(1, 'Господин Боб');
-            $master2    = new Master(2, 'сэр Вонючка');
+            $master1 = new Master(1, 'Господин Боб');
+            $master2 = new Master(2, 'сэр Вонючка');
             $masterRepo = $this->makeFakeMasterRepository($master1, $master2);
 
             // Раб
-            $slave1    = new Slave(1, 'Уродливый Фред', 20);
+            $slave1 = new Slave(1, 'Уродливый Фред', 20);
             $slaveRepo = $this->makeFakeSlaveRepository($slave1);
 
             // Договор аренды. 1й хозяин арендовал раба
@@ -72,17 +75,16 @@ class LeaseOperationTest extends TestCase
             ]);
 
             // Stub репозитория договоров
-            $contractsRepo = $this->prophesize(LeaseContractsRepository::class);
-            $contractsRepo
-                ->getForSlave($slave1->getId(), '2017-01-01', '2017-01-01')
-                ->willReturn([$leaseContract1]);
+            /** @var LeaseContractsRepositoryInterface|ObjectProphecy $contractsRepo */
+            $contractsRepo = $this->prophesize(LeaseContractsRepositoryInterface::class);
+            $contractsRepo->getForSlave($slave1->getId(), '2017-01-01', '2017-01-01')->willReturn([$leaseContract1]);
 
             // Запрос на новую аренду. 2й хозяин выбрал занятое время
-            $leaseRequest           = new LeaseRequest();
+            $leaseRequest = new LeaseRequest();
             $leaseRequest->masterId = $master2->getId();
-            $leaseRequest->slaveId  = $slave1->getId();
-            $leaseRequest->timeFrom = '2017-01-01 01:30:00';
-            $leaseRequest->timeTo   = '2017-01-01 02:01:00';
+            $leaseRequest->slaveId = $slave1->getId();
+            $leaseRequest->setTimeFrom('2017-01-01 01:30:00');
+            $leaseRequest->setTimeTo('2017-01-01 02:01:00');
 
             // Операция аренды
             $leaseOperation = new LeaseOperation($contractsRepo->reveal(), $masterRepo, $slaveRepo);
@@ -101,29 +103,28 @@ class LeaseOperationTest extends TestCase
     /**
      * Если раб бездельничает, то его легко можно арендовать
      */
-    public function test_idleSlave_successfullyLeased ()
+    public function test_idleSlave_successfullyLeased()
     {
         // -- Arrange
         {
             // Хозяева
-            $master1    = new Master(1, 'Господин Боб');
+            $master1 = new Master(1, 'Господин Боб');
             $masterRepo = $this->makeFakeMasterRepository($master1);
 
             // Раб
-            $slave1    = new Slave(1, 'Уродливый Фред', 20);
+            $slave1 = new Slave(1, 'Уродливый Фред', 20);
             $slaveRepo = $this->makeFakeSlaveRepository($slave1);
 
-            $contractsRepo = $this->prophesize(LeaseContractsRepository::class);
-            $contractsRepo
-                ->getForSlave($slave1->getId(), '2017-01-01', '2017-01-01')
-                ->willReturn([]);
+            /** @var LeaseContractsRepositoryInterface $contractsRepo */
+            $contractsRepo = $this->prophesize(LeaseContractsRepositoryInterface::class);
+            $contractsRepo->getForSlave($slave1->getId(), '2017-01-01', '2017-01-01')->willReturn([]);
 
             // Запрос на новую аренду
-            $leaseRequest           = new LeaseRequest();
+            $leaseRequest = new LeaseRequest();
             $leaseRequest->masterId = $master1->getId();
-            $leaseRequest->slaveId  = $slave1->getId();
-            $leaseRequest->timeFrom = '2017-01-01 01:30:00';
-            $leaseRequest->timeTo   = '2017-01-01 02:01:00';
+            $leaseRequest->slaveId = $slave1->getId();
+            $leaseRequest->setTimeFrom('2017-01-01 01:30:00');
+            $leaseRequest->setTimeTo('2017-01-01 02:01:00');
 
             // Операция аренды
             $leaseOperation = new LeaseOperation($contractsRepo->reveal(), $masterRepo, $slaveRepo);

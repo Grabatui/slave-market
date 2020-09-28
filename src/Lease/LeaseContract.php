@@ -2,8 +2,9 @@
 
 namespace SlaveMarket\Lease;
 
-use SlaveMarket\Master;
-use SlaveMarket\Slave;
+use Carbon\Carbon;
+use SlaveMarket\Entity\Master;
+use SlaveMarket\Entity\Slave;
 
 /**
  * Договор аренды
@@ -26,9 +27,23 @@ class LeaseContract
 
     public function __construct(Master $master, Slave $slave, float $price, array $leasedHours)
     {
-        $this->master      = $master;
-        $this->slave       = $slave;
-        $this->price       = $price;
+        $this->master = $master;
+        $this->slave = $slave;
+        $this->price = $price;
         $this->leasedHours = $leasedHours;
+    }
+
+    /**
+     * Возвращаем занятые относительно передаваемых границ времени часы
+     *
+     * @param Carbon $timeFrom
+     * @param Carbon $timeTo
+     * @return array
+     */
+    public function getLeasedBusyHours(Carbon $timeFrom, Carbon $timeTo): array
+    {
+        return array_filter($this->leasedHours, function (LeaseHour $hour) use ($timeFrom, $timeTo): bool {
+            return $hour->getDateTime()->between($timeFrom, $timeTo);
+        });
     }
 }

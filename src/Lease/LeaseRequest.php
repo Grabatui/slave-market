@@ -2,6 +2,8 @@
 
 namespace SlaveMarket\Lease;
 
+use Carbon\Carbon;
+
 /**
  * Запрос на аренду раба
  *
@@ -15,9 +17,29 @@ class LeaseRequest
     /** @var int id раба */
     public $slaveId;
 
-    /** @var string время начала работ Y-m-d H:i:s */
-    public $timeFrom;
+    /** @var Carbon время начала работ */
+    protected $timeFrom;
 
-    /** @var string время окончания работ Y-m-d H:i:s */
-    public $timeTo;
+    /** @var Carbon время окончания работ */
+    protected $timeTo;
+
+    public function getTimeFrom(): Carbon
+    {
+        return $this->timeFrom;
+    }
+
+    public function getTimeTo(): Carbon
+    {
+        return $this->timeTo;
+    }
+
+    public function setTimeFrom(string $time): void
+    {
+        $this->timeFrom = Carbon::createFromFormat('Y-m-d H:i:s', $time);
+    }
+
+    public function setTimeTo(string $time): void
+    {
+        $this->timeTo = Carbon::createFromFormat('Y-m-d H:i:s', $time);
+    }
 }

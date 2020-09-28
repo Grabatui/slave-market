@@ -54,4 +54,14 @@ class LeaseResponse
     {
         return $this->errors;
     }
+
+    /**
+     * Проверяет наличие ошибок
+     *
+     * @return bool
+     */
+    public function hasErrors(): bool
+    {
+        return (!empty($this->getErrors()));
+    }
 }
